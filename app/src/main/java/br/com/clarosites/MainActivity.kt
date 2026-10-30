@@ -79,17 +79,40 @@ class MainActivity : Activity() {
             setPadding(0, 5, 0, 0)
         })
         root.addView(header)
-        search = EditText(this).apply {
-            hint = "Código, rua, bairro, CEP ou cidade"
-            isSingleLine = true
-            textSize = 16f
-            setPadding(14, 8, 14, 8)
-            setBackgroundColor(Color.WHITE)
-        }
         val searchWrap = LinearLayout(this).apply {
-            setPadding(14, 12, 14, 4)
-            addView(search, LinearLayout.LayoutParams(-1, -2))
+            orientation = LinearLayout.VERTICAL
+            setPadding(16, 14, 16, 6)
         }
+        searchWrap.addView(TextView(this).apply {
+            text = "O QUE DESEJA PESQUISAR?"
+            textSize = 12f
+            setTextColor(green)
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(2, 0, 0, 6)
+        })
+        search = EditText(this).apply {
+            hint = "Código, endereço ou cidade"
+            isSingleLine = true
+            textSize = 18f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.rgb(30, 45, 36))
+            setHintTextColor(Color.GRAY)
+            setPadding(16, 12, 16, 12)
+            minHeight = 56
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(Color.WHITE)
+                setCornerRadius(14f)
+                setStroke(3, green)
+            }
+            contentDescription = "Campo destacado para pesquisar estações por código, endereço ou cidade"
+        }
+        searchWrap.addView(search, LinearLayout.LayoutParams(-1, -2))
+        searchWrap.addView(TextView(this).apply {
+            text = "Digite uma informação para encontrar a estação"
+            textSize = 12f
+            setTextColor(Color.DKGRAY)
+            setPadding(2, 5, 0, 0)
+        })
         root.addView(searchWrap)
         count = TextView(this).apply {
             setTextColor(Color.DKGRAY); textSize = 13f
@@ -178,6 +201,7 @@ class MainActivity : Activity() {
             .setTitle("Detalhes da estação")
             .setView(container)
             .setNegativeButton("FECHAR", null)
+            .setNeutralButton("COMPARTILHAR ENDEREÇO", null)
             .setPositiveButton("IR PARA O SITE", null)
             .create()
         dialog.setOnShowListener {
@@ -185,8 +209,40 @@ class MainActivity : Activity() {
             dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 openMaps(s); dialog.dismiss()
             }
+            dialog.getButton(android.app.AlertDialog.BUTTON_NEUTRAL).setTextColor(green)
+            dialog.getButton(android.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+                shareSite(s)
+            }
         }
         dialog.show()
+    }
+
+    private fun shareSite(s: Site) {
+        val address = s.address.ifBlank {
+            listOf(s.streetType, s.street, s.number, s.neighborhood, s.city, s.zip)
+                .filter { it.isNotBlank() }
+                .joinToString(", ")
+        }
+        val coordinates = if (s.latitude != null && s.longitude != null) {
+            "\nCoordenadas: ${s.latitude}, ${s.longitude}"
+        } else {
+            ""
+        }
+        val mapsUrl = if (s.latitude != null && s.longitude != null) {
+            "https://www.google.com/maps/search/?api=1&query=${s.latitude}%2C${s.longitude}"
+        } else if (address.isNotBlank()) {
+            "https://www.google.com/maps/search/?api=1&query=${Uri.encode(address)}"
+        } else {
+            ""
+        }
+        val message = "Estação: ${s.station}\nEndereço: ${address.ifBlank { "Não informado" }}\nCidade: ${s.city}$coordinates" +
+            if (mapsUrl.isNotBlank()) "\nLocalização no Google Maps: $mapsUrl" else ""
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "Endereço da estação ${s.station}")
+            putExtra(Intent.EXTRA_TEXT, message)
+        }
+        startActivity(Intent.createChooser(intent, "Compartilhar endereço da estação"))
     }
 
     private fun openMaps(s: Site) {
