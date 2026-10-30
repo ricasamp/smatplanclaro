@@ -13,6 +13,7 @@ import android.widget.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Locale
+import java.text.Normalizer
 
 class MainActivity : Activity() {
     private data class Site(
@@ -72,14 +73,14 @@ class MainActivity : Activity() {
             typeface = Typeface.DEFAULT_BOLD
         })
         header.addView(TextView(this).apply {
-            text = "Pesquise pelo código da estação"
+            text = "Pesquise por código, endereço ou cidade"
             textSize = 14f
             setTextColor(Color.WHITE)
             setPadding(0, 5, 0, 0)
         })
         root.addView(header)
         search = EditText(this).apply {
-            hint = "Digite o código. Ex.: ESP0592"
+            hint = "Código, rua, bairro, CEP ou cidade"
             isSingleLine = true
             textSize = 16f
             setPadding(14, 8, 14, 8)
@@ -127,17 +128,34 @@ class MainActivity : Activity() {
         list.setOnItemClickListener { _, _, position, _ -> showSite(filtered[position]) }
     }
 
+    private fun normalize(value: String): String {
+        return Normalizer.normalize(value.lowercase(Locale.ROOT), Normalizer.Form.NFD)
+            .replace(Regex("\\p{Mn}+"), "")
+            .trim()
+    }
+
     private fun filter(query: String) {
-        val q = query.trim().lowercase(Locale.ROOT)
-        filtered = if (q.isEmpty()) sites.take(150) else sites.filter {
-            it.station.lowercase(Locale.ROOT).contains(q)
-        }.take(500)
+        val q = normalize(query)
+        filtered = if (q.isEmpty()) {
+            sites.take(150)
+        } else {
+            sites.filter { site ->
+                val searchable = listOf(
+                    site.station, site.type, site.streetType, site.street, site.number,
+                    site.neighborhood, site.zip, site.city, site.address
+                ).joinToString(" ")
+                normalize(searchable).contains(q)
+            }.take(500)
+        }
         labels.clear()
         labels.addAll(filtered.map { it.station })
         if (::adapter.isInitialized) adapter.notifyDataSetChanged()
-        if (::count.isInitialized) count.text = if (q.isEmpty())
-            "Mostrando ${filtered.size} estações de ${sites.size}. Digite o código para pesquisar."
-        else "${filtered.size} resultado(s) para “$query”" + if (filtered.size == 500) " (limite da lista)" else ""
+        if (::count.isInitialized) count.text = when {
+            q.isEmpty() -> "Mostrando ${filtered.size} estações de ${sites.size}. Pesquise por código, endereço ou cidade."
+            filtered.isEmpty() -> "Nenhuma estação encontrada para “$query”. Tente outro termo."
+            else -> "${filtered.size} resultado(s) para “$query”" +
+                if (filtered.size == 500) " (limite da lista)" else ""
+        }
     }
 
     private fun showSite(s: Site) {
