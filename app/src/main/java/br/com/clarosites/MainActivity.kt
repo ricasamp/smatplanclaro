@@ -66,11 +66,44 @@ class MainActivity : Activity() {
             setPadding(20, 22, 20, 18)
             setBackgroundColor(green)
         }
-        header.addView(TextView(this).apply {
-            text = "ESTAÇÕES CLARO SMARTPLAN W30"
-            textSize = 23f
+        val brandRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        brandRow.addView(TextView(this).apply {
+            text = "claro"
+            textSize = 25f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, 0, 14, 0)
+            contentDescription = "Marca Claro"
+        })
+        val divider = View(this).apply {
+            setBackgroundColor(Color.argb(180, 255, 255, 255))
+        }
+        brandRow.addView(divider, LinearLayout.LayoutParams(1, 30))
+        brandRow.addView(TextView(this).apply {
+            text = "TECH HANDS"
+            textSize = 15f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(14, 0, 0, 0)
+            contentDescription = "Marca TECH HANDS"
+        })
+        header.addView(brandRow)
+        header.addView(TextView(this).apply {
+            text = "ESTAÇÕES CLARO SMARTPLAN W30"
+            textSize = 20f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, 12, 0, 0)
+        })
+        header.addView(TextView(this).apply {
+            text = "Ageplan Engenharia"
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            setPadding(0, 3, 0, 0)
         })
         header.addView(TextView(this).apply {
             text = "Pesquise por código, endereço ou cidade"
