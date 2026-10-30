@@ -80,7 +80,7 @@ class MainActivity : Activity() {
         root.addView(header)
         search = EditText(this).apply {
             hint = "Digite o código. Ex.: ESP0592"
-            singleLine = true
+            isSingleLine = true
             textSize = 16f
             setPadding(14, 8, 14, 8)
             setBackgroundColor(Color.WHITE)
