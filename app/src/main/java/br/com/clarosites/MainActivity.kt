@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.BitmapFactory
+import android.util.Base64
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -39,6 +41,16 @@ class MainActivity : Activity() {
         filter("")
     }
 
+    private fun loadLogo(assetName: String): android.graphics.Bitmap? {
+        return try {
+            val encoded = assets.open(assetName).bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val bytes = Base64.decode(encoded, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     private fun loadSites() {
         val text = assets.open("sites.json").bufferedReader(Charsets.UTF_8).use { it.readText() }
         val arr = JSONArray(text)
@@ -70,25 +82,24 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        brandRow.addView(TextView(this).apply {
-            text = "claro"
-            textSize = 25f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, 0, 14, 0)
-            contentDescription = "Marca Claro"
+        brandRow.addView(ImageView(this).apply {
+            setImageBitmap(loadLogo("logo_claro.jpg.b64"))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = "Logotipo oficial da Claro"
+        }, LinearLayout.LayoutParams(62, 62).apply {
+            rightMargin = 14
         })
-        val divider = View(this).apply {
+        brandRow.addView(View(this).apply {
             setBackgroundColor(Color.argb(180, 255, 255, 255))
-        }
-        brandRow.addView(divider, LinearLayout.LayoutParams(1, 30))
-        brandRow.addView(TextView(this).apply {
-            text = "TECH HANDS"
-            textSize = 15f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(14, 0, 0, 0)
-            contentDescription = "Marca TECH HANDS"
+        }, LinearLayout.LayoutParams(1, 58))
+        brandRow.addView(ImageView(this).apply {
+            setImageBitmap(loadLogo("logo_tech_hands.jpg.b64"))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = "Logotipo TECH HANDS"
+            setBackgroundColor(Color.WHITE)
+            setPadding(3, 3, 3, 3)
+        }, LinearLayout.LayoutParams(88, 88).apply {
+            leftMargin = 14
         })
         header.addView(brandRow)
         header.addView(TextView(this).apply {
